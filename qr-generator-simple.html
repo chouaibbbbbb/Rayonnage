@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0d0d0d;
+  --paper: #f5f0e8;
+  --gold: #c9a84c;
+  --gold-dark: #9a7a2e;
+  --border: rgba(13,13,13,0.12);
+  --shadow: 0 4px 24px rgba(13,13,13,0.1);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+/* HEADER */
+.header {
+  background: var(--ink);
+  padding: 18px 20px;
+  text-align: center;
+  border-bottom: 1px solid rgba(201,168,76,0.3);
+  position: relative;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: white;
+}
+.header h1 span { color: var(--gold); }
+.header p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; letter-spacing: 1px; }
+
+/* MAIN */
+.main { flex: 1; padding: 24px 16px; display: flex; flex-direction: column; gap: 16px; max-width: 500px; margin: 0 auto; width: 100%; }
+
+/* INPUT CARD */
+.input-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.input-card label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(13,13,13,0.4);
+  margin-bottom: 8px;
+}
+.input-row { display: flex; gap: 8px; }
+.input-row input {
+  flex: 1;
+  background: #faf7f2;
+  border: 1px solid rgba(13,13,13,0.2);
+  border-radius: 4px;
+  padding: 12px 14px;
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  outline: none;
+  direction: ltr;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-row input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+.gen-btn {
+  background: var(--ink);
+  color: var(--gold);
+  border: none;
+  border-radius: 4px;
+  padding: 12px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  letter-spacing: 0.5px;
+}
+.gen-btn:active { background: #2a2a2a; }
+
+/* SIZE OPTIONS */
+.size-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.size-btn {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #faf7f2;
+  color: rgba(13,13,13,0.5);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.size-btn.active {
+  background: var(--ink);
+  color: var(--gold);
+  border-color: var(--ink);
+}
+
+/* QR RESULT */
+.qr-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px 20px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  display: none;
+  animation: fadeUp 0.3s ease;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+.qr-card.show { display: block; }
+
+.qr-card::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-dark));
+  border-radius: 2px;
+  margin-bottom: 20px;
+}
+
+.qr-wrap {
+  display: inline-flex;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(13,13,13,0.08);
+}
+
+.qr-url {
+  font-size: 11px;
+  color: rgba(13,13,13,0.4);
+  word-break: break-all;
+  direction: ltr;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #faf7f2;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-family: monospace;
+}
+
+.action-row { display: flex; gap: 8px; }
+.dl-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: #faf7f2;
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.dl-btn.gold { background: var(--gold); border-color: var(--gold-dark); color: var(--ink); }
+.dl-btn:active { opacity: 0.8; }
+
+/* HISTORY */
+.history-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(13,13,13,0.35);
+  margin-bottom: 10px;
+}
+.history-item {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 11px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.history-item:active { border-color: var(--gold); }
+.hist-mini { background: white; border: 1px solid var(--border); border-radius: 2px; padding: 2px; flex-shrink: 0; }
+.hist-url { font-size: 12px; color: rgba(13,13,13,0.5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; flex: 1; font-family: monospace; }
+.hist-del { color: rgba(13,13,13,0.2); font-size: 16px; flex-shrink: 0; padding: 0 4px; }
+
+/* EMPTY */
+.empty { text-align: center; padding: 30px 0; color: rgba(13,13,13,0.2); font-size: 13px; }
+
+@media print {
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; text-align: center; padding: 20mm; }
+  #printArea canvas { display: block; margin: 0 auto 10px; }
+  #printArea p { font-size: 10px; color: #555; font-family: monospace; word-break: break-all; }
+}
+#printArea { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>QR<span>Gen</span> Pro</h1>
+  <p>GÉNÉRATEUR DE QR CODE DYNAMIQUE</p>
+</div>
+
+<div class="main">
+
+  <!-- INPUT -->
+  <div class="input-card">
+    <label>الرابط أو النص</label>
+    <div class="input-row">
+      <input type="text" id="urlInput" placeholder="https://example.com" dir="ltr">
+      <button class="gen-btn" onclick="generate()">⚡ Generate</button>
+    </div>
+    <div class="size-row">
+      <button class="size-btn" onclick="setSize(128,this)">S</button>
+      <button class="size-btn active" onclick="setSize(200,this)">M</button>
+      <button class="size-btn" onclick="setSize(280,this)">L</button>
+      <button class="size-btn" onclick="setSize(400,this)">XL</button>
+    </div>
+  </div>
+
+  <!-- QR RESULT -->
+  <div class="qr-card" id="qrCard">
+    <div class="qr-wrap">
+      <canvas id="qrCanvas"></canvas>
+    </div>
+    <div class="qr-url" id="qrUrl"></div>
+    <div class="action-row">
+      <button class="dl-btn gold" onclick="downloadQR()">⬇ Télécharger</button>
+      <button class="dl-btn" onclick="printQR()">🖨 Imprimer</button>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="historySection" style="display:none">
+    <div class="history-title">Historique</div>
+    <div id="historyList"></div>
+  </div>
+
+</div>
+
+<!-- PRINT AREA -->
+<div id="printArea">
+  <canvas id="printCanvas"></canvas>
+  <p id="printUrl"></p>
+</div>
+
+<script>
+let qrSize = 200;
+let history = JSON.parse(localStorage.getItem('qrHistory') || '[]');
+
+function setSize(size, btn) {
+  qrSize = size;
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // regenerate if there's already a QR
+  const url = document.getElementById('urlInput').value.trim();
+  if (url && document.getElementById('qrCard').classList.contains('show')) {
+    generateQR(url);
+  }
+}
+
+function generate() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { document.getElementById('urlInput').focus(); return; }
+  generateQR(url);
+  addToHistory(url);
+}
+
+function generateQR(url) {
+  new QRious({
+    element: document.getElementById('qrCanvas'),
+    value: url,
+    size: qrSize,
+    background: '#ffffff',
+    foreground: '#0d0d0d',
+    level: 'M'
+  });
+  document.getElementById('qrUrl').textContent = url;
+  document.getElementById('qrCard').classList.add('show');
+}
+
+function downloadQR() {
+  const canvas = document.getElementById('qrCanvas');
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'qrcode.png';
+  a.click();
+}
+
+function printQR() {
+  const src = document.getElementById('qrCanvas').toDataURL();
+  const url = document.getElementById('urlInput').value.trim();
+  // draw on print canvas
+  const pc = document.getElementById('printCanvas');
+  new QRious({ element: pc, value: url, size: 300, background: '#fff', foreground: '#000', level: 'M' });
+  document.getElementById('printUrl').textContent = url;
+  window.print();
+}
+
+// HISTORY
+function addToHistory(url) {
+  history = history.filter(u => u !== url);
+  history.unshift(url);
+  if (history.length > 8) history = history.slice(0, 8);
+  localStorage.setItem('qrHistory', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const section = document.getElementById('historySection');
+  if (!history.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = history.map((url, i) => `
+    <div class="history-item" onclick="loadHistory('${url.replace(/'/g,"\\'")}')">
+      <div class="hist-mini"><canvas id="hc-${i}" width="32" height="32"></canvas></div>
+      <div class="hist-url">${url}</div>
+      <div class="hist-del" onclick="event.stopPropagation();deleteHistory(${i})">✕</div>
+    </div>
+  `).join('');
+  history.forEach((url, i) => {
+    setTimeout(() => {
+      const c = document.getElementById('hc-' + i);
+      if (c) new QRious({ element: c, value: url, size: 32, background: '#fff', foreground: '#0d0d0d', level: 'L' });
+    }, i * 30);
+  });
+}
+
+function loadHistory(url) {
+  document.getElementById('urlInput').value = url;
+  generateQR(url);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteHistory(i) {
+  history.splice(i, 1);
+  localStorage.setItem('qrHistory', JSON.stringify(history));
+  renderHistory();
+}
+
+// Enter key
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generate();
+});
+
+// Init
+renderHistory();
+</script>
+</body>
+</html>
